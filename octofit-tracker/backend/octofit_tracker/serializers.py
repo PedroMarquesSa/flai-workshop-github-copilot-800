@@ -5,14 +5,24 @@ from bson import ObjectId
 
 class UserSerializer(serializers.ModelSerializer):
     id = serializers.SerializerMethodField()
+    team_name = serializers.SerializerMethodField()
     
     class Meta:
         model = User
-        fields = ['id', 'name', 'email', 'password', 'team_id', 'created_at']
+        fields = ['id', 'name', 'email', 'password', 'team_id', 'team_name', 'created_at']
         extra_kwargs = {'password': {'write_only': True}}
     
     def get_id(self, obj):
         return str(obj._id)
+    
+    def get_team_name(self, obj):
+        if obj.team_id:
+            try:
+                team = Team.objects.get(_id=ObjectId(obj.team_id))
+                return team.name
+            except Team.DoesNotExist:
+                return None
+        return None
 
 
 class TeamSerializer(serializers.ModelSerializer):
@@ -28,13 +38,23 @@ class TeamSerializer(serializers.ModelSerializer):
 
 class ActivitySerializer(serializers.ModelSerializer):
     id = serializers.SerializerMethodField()
+    user_name = serializers.SerializerMethodField()
     
     class Meta:
         model = Activity
-        fields = ['id', 'user_id', 'activity_type', 'duration', 'distance', 'calories', 'date', 'notes']
+        fields = ['id', 'user_id', 'user_name', 'activity_type', 'duration', 'distance', 'calories', 'date', 'notes']
     
     def get_id(self, obj):
         return str(obj._id)
+    
+    def get_user_name(self, obj):
+        if obj.user_id:
+            try:
+                user = User.objects.get(_id=ObjectId(obj.user_id))
+                return user.name
+            except User.DoesNotExist:
+                return None
+        return None
 
 
 class LeaderboardSerializer(serializers.ModelSerializer):
